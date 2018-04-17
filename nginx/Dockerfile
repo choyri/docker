@@ -3,8 +3,10 @@ FROM alpine:3.7
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
 ENV NGINX_VERSION 1.13.12
+ENV OPENSSL_VERSION 1.1.1-pre2
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
+    OPENSSL_PGP_KEYS=8657ABB260F056B1E5190839D9C4D26D0E604491 \
     && CONFIG="\
         --prefix=/etc/nginx \
         --sbin-path=/usr/sbin/nginx \
@@ -49,14 +51,17 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         --with-compat \
         --with-file-aio \
         --with-http_v2_module \
+        --with-openssl=/usr/src/openssl-$OPENSSL_VERSION \
+        --with-openssl-opt=enable-tls1_3 \
     " \
     && addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-    && apk add --no-cache --virtual .build-deps \
+    && sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
+    && apk update \
+    && apk add --virtual .build-deps \
         gcc \
         libc-dev \
         make \
-        openssl-dev \
         pcre-dev \
         zlib-dev \
         linux-headers \
@@ -67,23 +72,33 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         geoip-dev \
     && curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
     && curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
+    && curl -fSL https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz -o openssl.tar.gz \
+    && curl -fSL https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz.asc -o openssl.tar.gz.asc \
     && export GNUPGHOME="$(mktemp -d)" \
-    && found=''; \
-    for server in \
+    && SERVERS="\
         ha.pool.sks-keyservers.net \
         hkp://keyserver.ubuntu.com:80 \
         hkp://p80.pool.sks-keyservers.net:80 \
         pgp.mit.edu \
-    ; do \
+    "; \
+    found=''; \
+    for server in $SERVERS; do \
         echo "Fetching GPG key $GPG_KEYS from $server"; \
         gpg --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$GPG_KEYS" && found=yes && break; \
     done; \
     test -z "$found" && echo >&2 "error: failed to fetch GPG key $GPG_KEYS" && exit 1; \
     gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
-    && rm -rf "$GNUPGHOME" nginx.tar.gz.asc \
+    found=''; \
+    for server in $SERVERS; do \
+        echo "Fetching PGP key $OPENSSL_PGP_KEYS from $server"; \
+        gpg --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$OPENSSL_PGP_KEYS" && found=yes && break; \
+    done; \
+    test -z "$found" && echo >&2 "error: failed to fetch PGP key $OPENSSL_PGP_KEYS" && exit 1; \
+    gpg --batch --verify openssl.tar.gz.asc openssl.tar.gz \
+    && rm -rf "$GNUPGHOME" nginx.tar.gz.asc openssl.tar.gz.asc \
     && mkdir -p /usr/src \
-    && tar -zxC /usr/src -f nginx.tar.gz \
-    && rm nginx.tar.gz \
+    && ls *.tar.gz | xargs -i tar -zxC /usr/src/ -f {} \
+    && rm *.tar.gz \
     && cd /usr/src/nginx-$NGINX_VERSION \
     && ./configure $CONFIG --with-debug \
     && make -j$(getconf _NPROCESSORS_ONLN) \
@@ -108,7 +123,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && ln -s ../../usr/lib/nginx/modules /etc/nginx/modules \
     && strip /usr/sbin/nginx* \
     && strip /usr/lib/nginx/modules/*.so \
-    && rm -rf /usr/src/nginx-$NGINX_VERSION \
+    && rm -rf /usr/src/* \
     \
     # Bring in gettext so we can get `envsubst`, then throw
     # the rest away. To do this, we need to install `gettext`
@@ -126,6 +141,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && apk add --no-cache --virtual .nginx-rundeps $runDeps \
     && apk del .build-deps \
     && apk del .gettext \
+    && rm -rf /var/cache/apk/* \
     && mv /tmp/envsubst /usr/local/bin/ \
     \
     # Bring in tzdata so users could set the timezones through the environment
