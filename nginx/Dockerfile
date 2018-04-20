@@ -141,13 +141,13 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && apk add --virtual .nginx-rundeps $runDeps \
     && apk del .build-deps \
     && apk del .gettext \
-    && rm -rf /var/cache/apk/* \
     && mv /tmp/envsubst /usr/local/bin/ \
     \
     # Bring in tzdata so users could set the timezones through the environment
     # variables
     && apk add tzdata \
     \
+    && rm -rf /var/cache/apk/* \
     # forward request and error logs to docker log collector
     && ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
