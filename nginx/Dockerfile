@@ -53,6 +53,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         --with-http_v2_module \
         --with-openssl=/usr/src/openssl-$OPENSSL_VERSION \
         --with-openssl-opt=enable-tls1_3 \
+        --with-openssl-opt=enable-weak-ssl-ciphers \
     " \
     && addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
