@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-ENV FRP_VERSION 0.16.1
+ENV FRP_VERSION 0.18.0
 
 RUN FRP_PATH=/go/src/github.com/fatedier/frp \
     && sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
@@ -18,4 +18,4 @@ FROM scratch
 COPY --from=builder /usr/sbin/frp* /
 COPY --from=builder /etc/*.ini /
 
-CMD ["frps", "-c", "/frps.ini"]
+CMD ["/frps", "-c", "/frps.ini"]
