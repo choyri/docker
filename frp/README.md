@@ -35,9 +35,6 @@ docker run -itd \
 ```
 
 
-## 复制客户端
+## 客户端
 
-```
-docker cp frp:/frpc ./frpc
-docker cp frp:/frpc_full.ini ./frpc.ini
-```
+到 [这里](https://github.com/fatedier/frp/releases) 下载对应版本的客户端。
