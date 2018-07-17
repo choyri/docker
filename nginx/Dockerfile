@@ -1,9 +1,9 @@
-FROM alpine:3.7
+FROM alpine:latest
 
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
-ENV NGINX_VERSION 1.14.0
-ENV OPENSSL_VERSION 1.1.1-pre2
+ENV NGINX_VERSION 1.15.1
+ENV OPENSSL_VERSION 1.1.1-pre8
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     OPENSSL_PGP_KEYS=8657ABB260F056B1E5190839D9C4D26D0E604491 \
@@ -51,9 +51,10 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         --with-compat \
         --with-file-aio \
         --with-http_v2_module \
+        --with-http_v2_hpack_enc \
+        --with-http_spdy_module \
+        --add-module=/usr/src/ngx_brotli \
         --with-openssl=/usr/src/openssl-$OPENSSL_VERSION \
-        --with-openssl-opt=enable-tls1_3 \
-        --with-openssl-opt=enable-weak-ssl-ciphers \
     " \
     && addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
@@ -71,6 +72,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         libxslt-dev \
         gd-dev \
         geoip-dev \
+        git \
+        patch \
     && curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
     && curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
     && curl -fSL https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz -o openssl.tar.gz \
@@ -100,7 +103,15 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && mkdir -p /usr/src \
     && ls *.tar.gz | xargs -i tar -zxC /usr/src/ -f {} \
     && rm *.tar.gz \
+    && cd /usr/src \
+    && git clone https://github.com/eustas/ngx_brotli.git \
+    && cd ngx_brotli && git submodule update --init \
+    && cd /usr/src/openssl-$OPENSSL_VERSION \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-equal-pre8_ciphers.patch | patch -p1 \
     && cd /usr/src/nginx-$NGINX_VERSION \
+    && curl https://raw.githubusercontent.com/kn007/patch/master/nginx.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/kn007/patch/master/fix_nginx_hpack_push_error.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/kn007/patch/master/nginx_auto_using_PRIORITIZE_CHACHA.patch | patch -p1 \
     && ./configure $CONFIG --with-debug \
     && make -j$(getconf _NPROCESSORS_ONLN) \
     && mv objs/nginx objs/nginx-debug \
