@@ -1,6 +1,6 @@
 FROM composer:latest AS composer
 
-FROM php:7-fpm-alpine3.7
+FROM php:7-fpm-alpine
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 COPY --from=composer /usr/bin/composer /usr/bin/composer
@@ -11,7 +11,7 @@ RUN sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /e
         libjpeg-turbo-dev \
         libpng-dev \
     && pecl install redis \
-    && docker-php-ext-enable redis \
+    && docker-php-ext-enable redis opcache \
     && docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
     && docker-php-ext-install gd zip mysqli pdo_mysql \
     && apk del .build-deps \
