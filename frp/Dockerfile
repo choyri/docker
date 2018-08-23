@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-ENV FRP_VERSION 0.20.0
+ENV FRP_VERSION 0.21.0
 
 RUN FRP_PATH=/go/src/github.com/fatedier/frp \
     && sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
@@ -11,11 +11,11 @@ RUN FRP_PATH=/go/src/github.com/fatedier/frp \
     && sed -i "s/go build -o/go build --ldflags '-linkmode external -extldflags \"-static\"' -o/g" Makefile \
     && make \
     && mv bin/frps /usr/sbin/ \
-    && mv conf/*.ini /etc/
+    && mv conf/frps.ini /etc/
 
 FROM scratch
 
 COPY --from=builder /usr/sbin/frps /
-COPY --from=builder /etc/*.ini /
+COPY --from=builder /etc/frps.ini /
 
 CMD ["/frps", "-c", "/frps.ini"]
