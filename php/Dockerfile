@@ -8,9 +8,10 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 RUN sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
     && apk update \
     && apk add --virtual .build-deps $PHPIZE_DEPS \
+        libzip-dev \
         libjpeg-turbo-dev \
         libpng-dev \
-    && pecl install redis \
+    && pecl channel-update pecl.php.net && pecl install redis \
     && docker-php-ext-enable redis opcache \
     && docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
     && docker-php-ext-install gd zip mysqli pdo_mysql \
