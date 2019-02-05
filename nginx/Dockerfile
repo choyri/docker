@@ -2,8 +2,8 @@ FROM alpine:latest
 
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
-ENV NGINX_VERSION 1.15.2
-ENV OPENSSL_VERSION 1.1.1-pre8
+ENV NGINX_VERSION 1.15.8
+ENV OPENSSL_VERSION 1.1.1a
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     OPENSSL_PGP_KEYS=8657ABB260F056B1E5190839D9C4D26D0E604491 \
@@ -51,8 +51,6 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         --with-compat \
         --with-file-aio \
         --with-http_v2_module \
-        --with-http_v2_hpack_enc \
-        --with-http_spdy_module \
         --add-module=/usr/src/ngx_brotli \
         --with-openssl=/usr/src/openssl-$OPENSSL_VERSION \
     " \
@@ -68,7 +66,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         zlib-dev \
         linux-headers \
         curl \
-        gnupg \
+        gnupg1 \
         libxslt-dev \
         gd-dev \
         geoip-dev \
@@ -107,11 +105,10 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && git clone https://github.com/eustas/ngx_brotli.git \
     && cd ngx_brotli && git submodule update --init \
     && cd /usr/src/openssl-$OPENSSL_VERSION \
-    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-equal-pre8_ciphers.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-equal-1.1.1a_ciphers.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-1.1.1a-chacha_draft.patch | patch -p1 \
     && cd /usr/src/nginx-$NGINX_VERSION \
-    && curl https://raw.githubusercontent.com/kn007/patch/master/nginx.patch | patch -p1 \
-    && curl https://raw.githubusercontent.com/kn007/patch/master/fix_nginx_hpack_push_error.patch | patch -p1 \
-    && curl https://raw.githubusercontent.com/kn007/patch/master/nginx_auto_using_PRIORITIZE_CHACHA.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/nginx_strict-sni.patch | patch -p1 \
     && ./configure $CONFIG --with-debug \
     && make -j$(getconf _NPROCESSORS_ONLN) \
     && mv objs/nginx objs/nginx-debug \
@@ -165,10 +162,12 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
 RUN cp /usr/share/zoneinfo/${TZ:-Asia/Shanghai} /etc/localtime && echo "${TZ:-Asia/Shanghai}" > /etc/timezone \
-    && mkdir /etc/nginx/proxycache
+    && mkdir /etc/nginx/proxycache/ \
+    && mkdir /etc/nginx/conf.d/stream/
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY nginx.stream.example.conf /etc/nginx/conf.d/stream/redis.conf.example
 
 EXPOSE 80 443
 
