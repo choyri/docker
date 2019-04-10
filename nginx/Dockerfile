@@ -2,8 +2,8 @@ FROM alpine:latest
 
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
-ENV NGINX_VERSION 1.15.8
-ENV OPENSSL_VERSION 1.1.1a
+ENV NGINX_VERSION 1.15.11
+ENV OPENSSL_VERSION 1.1.1b
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     OPENSSL_PGP_KEYS=8657ABB260F056B1E5190839D9C4D26D0E604491 \
@@ -105,8 +105,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && git clone https://github.com/eustas/ngx_brotli.git \
     && cd ngx_brotli && git submodule update --init \
     && cd /usr/src/openssl-$OPENSSL_VERSION \
-    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-equal-1.1.1a_ciphers.patch | patch -p1 \
-    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-1.1.1a-chacha_draft.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-equal-$OPENSSL_VERSION_ciphers.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-$OPENSSL_VERSION-chacha_draft.patch | patch -p1 \
     && cd /usr/src/nginx-$NGINX_VERSION \
     && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/nginx_strict-sni.patch | patch -p1 \
     && ./configure $CONFIG --with-debug \
