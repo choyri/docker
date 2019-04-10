@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-ENV FRP_VERSION 0.24.1
+ENV FRP_VERSION 0.25.3
 
 RUN FRP_PATH=/go/src/github.com/fatedier/frp \
     && sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
