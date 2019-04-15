@@ -105,10 +105,10 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && git clone https://github.com/eustas/ngx_brotli.git \
     && cd ngx_brotli && git submodule update --init \
     && cd /usr/src/openssl-$OPENSSL_VERSION \
-    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-equal-$OPENSSL_VERSION_ciphers.patch | patch -p1 \
-    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-$OPENSSL_VERSION-chacha_draft.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-equal-"$OPENSSL_VERSION"_ciphers.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/openssl-"$OPENSSL_VERSION"-chacha_draft.patch | patch -p1 \
     && cd /usr/src/nginx-$NGINX_VERSION \
-    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/nginx_strict-sni.patch | patch -p1 \
+    && curl https://raw.githubusercontent.com/hakasenyang/openssl-patch/master/nginx_strict-sni_1.15.10.patch | patch -p1 \
     && ./configure $CONFIG --with-debug \
     && make -j$(getconf _NPROCESSORS_ONLN) \
     && mv objs/nginx objs/nginx-debug \
