@@ -7,14 +7,17 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 RUN sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
     && apk update \
-    && apk add --virtual .build-deps $PHPIZE_DEPS \
+    && apk add \
         libzip-dev \
         libjpeg-turbo-dev \
         libpng-dev \
+        libwebp-dev \
+        freetype-dev \
+    && apk add --virtual .build-deps $PHPIZE_DEPS \
     && pecl channel-update pecl.php.net && pecl install redis \
     && docker-php-ext-enable redis opcache \
-    && docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
-    && docker-php-ext-install gd zip mysqli pdo_mysql \
+    && docker-php-ext-configure gd --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/ --with-webp-dir=/usr/include/ --with-freetype-dir=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd zip mysqli pdo_mysql \
     && apk del .build-deps \
     && apk add tzdata \
     && rm -rf /tmp/pear ~/.pearrc /var/cache/apk/*
