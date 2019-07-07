@@ -1,0 +1,24 @@
+version: '3.7'
+
+services:
+  elasticsearch:
+    image: elasticsearch:7.2.0
+    container_name: es72
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./plugins:/usr/share/elasticsearch/plugins
+      - ./logs:/usr/share/elasticsearch/logs
+      - ./data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
