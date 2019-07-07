@@ -1,8 +1,8 @@
 FROM nginx:1.17-alpine
 
-LABEL maintainer="choyri <i@choyri.com>"
+LABEL maintainer="chotow <i@choyri.com>"
 
-ENV NGINX_VERSION 1.17.0
+ENV NGINX_VERSION 1.17.1
 
 RUN set -x \
     && sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
