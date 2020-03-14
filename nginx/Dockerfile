@@ -17,7 +17,7 @@ RUN set -x \
         zlib-dev \
         git \
     && cd ${tempDir} \
-    && git clone https://github.com/eustas/ngx_brotli.git \
+    && git clone https://github.com/google/ngx_brotli.git \
     && cd ngx_brotli && git submodule update --init && cd ../ \
     && wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -O nginx.tar.gz \
     && tar -zxf nginx.tar.gz \
