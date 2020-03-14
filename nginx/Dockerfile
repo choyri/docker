@@ -1,10 +1,12 @@
-FROM nginx:1.17-alpine
+ARG IMAGE_TAG=alpine
+
+FROM nginx:${IMAGE_TAG}
+ARG VERSION
 
 LABEL maintainer="chotow <i@choyri.com>"
 
-ENV NGINX_VERSION 1.17.9
-
 RUN set -x \
+    && if [ "$VERSION" == "" ] ; then echo 'arg VERSION does not exist'; exit 1; fi \
     && sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
     && apk update \
     && tempDir="$(mktemp -d)" \
@@ -19,9 +21,9 @@ RUN set -x \
     && cd ${tempDir} \
     && git clone https://github.com/google/ngx_brotli.git \
     && cd ngx_brotli && git submodule update --init && cd ../ \
-    && wget https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -O nginx.tar.gz \
+    && wget https://nginx.org/download/nginx-${VERSION}.tar.gz -O nginx.tar.gz \
     && tar -zxf nginx.tar.gz \
-    && cd nginx-$NGINX_VERSION && ./configure --with-compat --add-dynamic-module=../ngx_brotli \
+    && cd nginx-${VERSION} && ./configure --with-compat --add-dynamic-module=../ngx_brotli \
     && make modules \
     && cp objs/ngx_http_brotli*.so /etc/nginx/modules/ \
     && rm -rf "$tempDir" \
