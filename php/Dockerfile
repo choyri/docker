@@ -1,6 +1,8 @@
+ARG IMAGE_TAG=fpm-alpine
+
 FROM composer:latest AS composer
 
-FROM php:7-fpm-alpine
+FROM php:${IMAGE_TAG}
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 COPY --from=composer /usr/bin/composer /usr/bin/composer
