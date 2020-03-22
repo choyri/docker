@@ -1,0 +1,5 @@
+#!/bin/bash
+# ref: https://docs.docker.com/docker-cloud/builds/advanced/
+
+docker tag $IMAGE_NAME $DOCKER_REPO:latest
+docker push $DOCKER_REPO:latest
