@@ -15,11 +15,12 @@ RUN sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /e
         libwebp-dev \
         freetype-dev \
         imagemagick-dev \
+        gmp-dev \
     && apk add --virtual .build-deps $PHPIZE_DEPS \
     && pecl channel-update pecl.php.net && pecl install redis imagick \
     && docker-php-ext-enable redis imagick opcache \
     && docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
-    && docker-php-ext-install -j$(nproc) gd exif zip mysqli pdo_mysql \
+    && docker-php-ext-install -j$(nproc) gd exif zip gmp mysqli pdo_mysql \
     && apk del .build-deps \
     && apk add tzdata \
     && rm -rf /tmp/pear ~/.pearrc /var/cache/apk/*
