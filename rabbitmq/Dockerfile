@@ -1,4 +1,6 @@
-FROM rabbitmq:alpine
+ARG IMAGE_TAG=alpine
+
+FROM rabbitmq:${IMAGE_TAG}
 
 LABEL maintainer="chotow <i@choyri.com>"
 
