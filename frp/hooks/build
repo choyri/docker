@@ -2,6 +2,7 @@
 # ref: https://docs.docker.com/docker-cloud/builds/advanced/
 
 docker build \
-    --build-arg VERSION=${DOCKER_TAG} \
+    --build-arg BRANCH=${DOCKER_TAG} \
+    --build-arg ON_HUB=true
     -f $DOCKERFILE_PATH \
     -t $IMAGE_NAME .
