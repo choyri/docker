@@ -1,22 +1,24 @@
 FROM golang:alpine AS builder
-ARG VERSION
+
+ARG BRANCH
+ARG ON_HUB
 
 RUN set -x \
-    && if [ "$VERSION" == "" ] ; then echo 'arg VERSION does not exist'; exit 1; fi \
-    && FRP_PATH=/go/src/github.com/fatedier/frp \
-    && sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories \
-    && apk update \
-    && apk add gcc git libc-dev make \
-    && git clone https://github.com/fatedier/frp -b "v${VERSION}" $FRP_PATH \
-    && cd $FRP_PATH \
-    && sed -i "s/go build -o/go build --ldflags '-linkmode external -extldflags \"-static\"' -o/g" Makefile \
-    && make \
-    && mv bin/frps /usr/sbin/ \
-    && mv conf/frps.ini /etc/
+    && if [ -z "${BRANCH}" ]; then BRANCH=master; else BRANCH=v${BRANCH}; fi \
+    && if [ -z "${ON_HUB}" ]; then \
+        sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \
+        go env -w GOPROXY="https://goproxy.cn,direct" GOSUMDB="sum.golang.google.cn"; \
+    fi \
+    && apk --no-cache add git gcc libc-dev tzdata \
+    && git clone -b "${BRANCH}" --depth 1 https://github.com/fatedier/frp && cd frp \
+    && go build -ldflags '-s -w -linkmode external -extldflags "-static"' -o bin/frps ./cmd/frps
 
 FROM scratch
 
-COPY --from=builder /usr/sbin/frps /
-COPY --from=builder /etc/frps.ini /
+LABEL maintainer="chotow <i@choyri.com>"
+
+COPY --from=builder /go/frp/bin/frps /
+COPY --from=builder /go/frp/conf/frps.ini /
+COPY --from=builder /usr/share/zoneinfo/${TZ:-Asia/Shanghai} /etc/localtime
 
 CMD ["/frps", "-c", "/frps.ini"]
