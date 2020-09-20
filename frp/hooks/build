@@ -3,6 +3,6 @@
 
 docker build \
     --build-arg BRANCH=${DOCKER_TAG} \
-    --build-arg ON_HUB=true
+    --build-arg ON_HUB=true \
     -f $DOCKERFILE_PATH \
     -t $IMAGE_NAME .
