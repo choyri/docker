@@ -9,16 +9,23 @@ RUN set -x \
         sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \
         go env -w GOPROXY="https://goproxy.cn,direct" GOSUMDB="sum.golang.google.cn"; \
     fi \
-    && apk --no-cache add git gcc libc-dev tzdata \
-    && git clone -b "${BRANCH}" --depth 1 https://github.com/fatedier/frp && cd frp \
+    && apk --no-cache add \
+        git gcc libc-dev \
+        tzdata \
+    \
+    && git clone -b "${BRANCH}" --depth 1 https://github.com/fatedier/frp \
+    && cd frp \
     && go build -ldflags '-s -w -linkmode external -extldflags "-static"' -o bin/frps ./cmd/frps
+
 
 FROM scratch
 
-LABEL maintainer="chotow <i@choyri.com>"
+ARG TZ
 
-COPY --from=builder /go/frp/bin/frps /
-COPY --from=builder /go/frp/conf/frps.ini /
-COPY --from=builder /usr/share/zoneinfo/${TZ:-Asia/Shanghai} /etc/localtime
+LABEL maintainer="Chotow <i@choyri.com>"
+
+COPY --from=builder /go/frp/bin/frps                            /
+COPY --from=builder /go/frp/conf/frps.ini                       /
+COPY --from=builder /usr/share/zoneinfo/${TZ:-Asia/Shanghai}    /etc/localtime
 
 CMD ["/frps", "-c", "/frps.ini"]
