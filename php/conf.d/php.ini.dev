@@ -1,4 +1,5 @@
 [PHP]
+zend.exception_ignore_args = Off
 expose_php = On
 error_reporting = E_ALL
 display_errors = On
