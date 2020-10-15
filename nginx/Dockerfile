@@ -9,7 +9,6 @@ RUN set -x \
     \
     && if [ -z "${ON_HUB}" ]; then \
         sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \
-        go env -w GOPROXY="https://goproxy.cn,direct" GOSUMDB="sum.golang.google.cn"; \
     fi \
     && apk update \
     && apk add --virtual .build-deps \
