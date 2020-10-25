@@ -1,0 +1,13 @@
+name: 'Auto Tag'
+author: Chotow
+description: '自动创建 choyri/docker 的 tag，以触发 docker hub 构建。'
+inputs:
+  github_token:
+    description: 'GitHub Token'
+    required: true
+runs:
+  using: node12
+  main: scripts/dist/index.cjs
+branding:
+  icon: git-commit
+  color: yellow
