@@ -7,6 +7,5 @@ IMAGE_TAG=fpm-alpine
 
 docker build \
     --build-arg IMAGE_TAG=${IMAGE_TAG} \
-    --build-arg ON_HUB=true \
     -f $DOCKERFILE_PATH \
     -t $IMAGE_NAME .
