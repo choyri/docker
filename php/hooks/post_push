@@ -1,7 +1,7 @@
 #!/bin/bash
-# ref: https://docs.docker.com/docker-cloud/builds/advanced/
+# ref: https://docs.docker.com/docker-hub/builds/advanced/
 
-if [ "$DOCKER_TAG" == "latest" ] ; then echo 'No need to tag latest, exit.'; exit 0; fi
+[[ ! "$DOCKER_TAG" =~ ^[0-9.]+$ ]] && echo 'No need to tag latest, exit.' && exit
 
 docker tag $IMAGE_NAME $DOCKER_REPO:latest
 docker push $DOCKER_REPO:latest
