@@ -1,14 +1,16 @@
-ARG IMAGE_TAG=fpm-alpine
+ARG BASE_IMAGE_TAG=fpm-alpine
 
-FROM php:$IMAGE_TAG
+FROM php:$BASE_IMAGE_TAG
 
 LABEL maintainer="Chotow <i@choyri.com>"
 
-ARG IMAGE_TAG
+ARG BASE_IMAGE_TAG
+ARG DOCKER_TAG=unknown
 
 RUN set -eux; \
     \
-    echo "Image Tag: $IMAGE_TAG"; \
+    echo "Base Image Tag: $BASE_IMAGE_TAG"; \
+    echo "Docker Tag: $DOCKER_TAG"; \
     \
     sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \ 
     apk update; \
@@ -18,7 +20,8 @@ RUN set -eux; \
     pecl install redis; \
     docker-php-ext-enable redis; \
     \
-    if [ $(expr match $IMAGE_TAG 8) == 0 ]; then \
+    # imagick 暂未兼容 php8 https://github.com/Imagick/imagick/issues/358
+    if echo $BASE_IMAGE_TAG | grep -qv "^8"; then \
         apk add imagemagick-dev; \
         pecl install imagick; \
         docker-php-ext-enable imagick; \
@@ -44,7 +47,12 @@ RUN set -eux; \
         exif \
     ; \
     \
-    docker-php-ext-enable opcache; \
+    if echo $DOCKER_TAG | grep -q "dev"; then \
+        pecl install xdebug; \
+        docker-php-ext-enable xdebug; \
+    else \
+        docker-php-ext-enable opcache; \
+    fi; \
     \
     apk del .build-deps; \
     \
