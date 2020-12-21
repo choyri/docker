@@ -1,11 +1,11 @@
 #!/bin/bash
 # ref: https://docs.docker.com/docker-cloud/builds/advanced/
 
-IMAGE_TAG=alpine
+BASE_IMAGE_TAG=alpine
 
-[[ "$DOCKER_TAG" != "latest" ]] && IMAGE_TAG=${DOCKER_TAG}-${IMAGE_TAG}
+[[ "$DOCKER_TAG" != "latest" ]] && BASE_IMAGE_TAG=${DOCKER_TAG}-${BASE_IMAGE_TAG}
 
 docker build \
-    --build-arg IMAGE_TAG=${IMAGE_TAG} \
+    --build-arg BASE_IMAGE_TAG=${BASE_IMAGE_TAG} \
     -f $DOCKERFILE_PATH \
     -t $IMAGE_NAME .
