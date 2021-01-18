@@ -58,7 +58,7 @@ server {
 
     ssl_certificate         /etc/nginx/ssl/example.com.cer;
     ssl_certificate_key     /etc/nginx/ssl/example.com.key;
-    ssl_trusted_certificate /etc/nginx/ssl/chain.pem;
+    ssl_trusted_certificate /etc/nginx/ssl/chain.pem; # 中间证书 & 根证书
 
     location / {
         root    /usr/share/nginx/html;
