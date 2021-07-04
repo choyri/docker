@@ -20,12 +20,9 @@ RUN set -eux; \
     pecl install redis; \
     docker-php-ext-enable redis; \
     \
-    # imagick 暂未兼容 php8 https://github.com/Imagick/imagick/issues/358
-    if echo $BASE_IMAGE_TAG | grep -qv "^8"; then \
-        apk add imagemagick-dev; \
-        pecl install imagick; \
-        docker-php-ext-enable imagick; \
-    fi; \
+    apk add imagemagick-dev; \
+    pecl install imagick; \
+    docker-php-ext-enable imagick; \
     \
     apk add \
         libjpeg-turbo-dev \
@@ -56,6 +53,9 @@ RUN set -eux; \
     \
     apk del .build-deps; \
     \
+    # for imagick
+    apk add libgomp; \
+    \
     # https://wiki.alpinelinux.org/wiki/Setting_the_timezone
     apk add tzdata; \
     cp /usr/share/zoneinfo/${TZ:-Asia/Shanghai} /etc/localtime; \
@@ -64,6 +64,7 @@ RUN set -eux; \
     apk del tzdata; \
     \
     rm -rf /var/cache/apk/*; \
+    rm -rf /tmp/pear; \
     \
     php -v
 
