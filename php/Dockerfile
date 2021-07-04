@@ -12,7 +12,7 @@ RUN set -eux; \
     echo "Base Image Tag: $BASE_IMAGE_TAG"; \
     echo "Docker Tag: $DOCKER_TAG"; \
     \
-    sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \ 
+    sed -i 's/http[s]:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \ 
     apk update; \
     \
     apk add --virtual .build-deps $PHPIZE_DEPS; \

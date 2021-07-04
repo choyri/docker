@@ -1,7 +1,7 @@
 #!/bin/bash
 # ref: https://docs.docker.com/docker-hub/builds/advanced/
 
-BASE_IMAGE_TAG=fpm-alpine
+BASE_IMAGE_TAG=fpm-alpine3.13
 VERSION=${DOCKER_TAG%%-*}
 
 [[ "$DOCKER_TAG" != "latest" ]] && BASE_IMAGE_TAG=${VERSION}-${BASE_IMAGE_TAG}
