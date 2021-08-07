@@ -1,17 +1,20 @@
-ARG IMAGE_TAG=alpine
+ARG BASE_IMAGE_TAG=alpine
 
-FROM nginx:${IMAGE_TAG} AS builder
 
-ARG VERSION
+FROM nginx:${BASE_IMAGE_TAG} AS builder
 
-RUN set -x \
-    && if [ "$VERSION" == "" ] ; then echo 'arg VERSION does not exist'; exit 1; fi \
+ARG BASE_IMAGE_TAG
+
+RUN set -eux; \
     \
-    && if [ -z "${ON_HUB}" ]; then \
-        sed -i 's/http:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \
-    fi \
-    && apk update \
-    && apk add --virtual .build-deps \
+    VERSION=$(echo $NGINX_VERSION); \
+    echo "Base Image Tag: ${BASE_IMAGE_TAG}"; \
+    echo "Version: ${VERSION}"; \
+    \
+    sed -i 's/http[s]:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \ 
+    apk update; \
+    \
+    apk add --no-cache --virtual .build-deps \
         gcc \
         libc-dev \
         make \
@@ -19,40 +22,38 @@ RUN set -x \
         zlib-dev \
         git \
         openssl \
+    ; \
+    wget https://nginx.org/download/nginx-${VERSION}.tar.gz -O nginx.tar.gz; \
+    tar -zxf nginx.tar.gz; \
+    cd nginx-${VERSION}; \
     \
-    && tempDir="$(mktemp -d)" \
-    && chown nobody:nobody $tempDir \
-    && cd ${tempDir} \
+    git clone --depth 1 --recursive https://github.com/google/ngx_brotli.git /tmp/ngx_brotli; \
+    nginx -V 2>&1 | grep -o -- --.* | xargs -I {} ./configure {} --with-compat --add-dynamic-module=/tmp/ngx_brotli; \
+    make modules; \
+    cp objs/ngx_http_brotli*.so /etc/nginx/modules/; \
     \
-    && git clone --depth 1 https://github.com/google/ngx_brotli.git \
-    && cd ngx_brotli \
-    && git submodule update --init \
-    && cd ../ \
+    openssl dhparam -out /etc/nginx/dhparam.pem 2048; \
     \
-    && wget https://nginx.org/download/nginx-${VERSION}.tar.gz -O nginx.tar.gz \
-    && tar -zxf nginx.tar.gz \
-    && cd nginx-${VERSION} \
-    && nginx -V 2>&1 | grep -o -- --.* | xargs -I {} ./configure {} --with-compat --add-dynamic-module=../ngx_brotli \
-    && make modules \
-    && cp objs/ngx_http_brotli*.so /etc/nginx/modules/ \
-    \
-    && openssl dhparam -out /etc/nginx/dhparam.pem 2048
+    nginx -v
 
 
-FROM nginx:${IMAGE_TAG}
-
-ARG TZ
+FROM nginx:${BASE_IMAGE_TAG}
 
 LABEL maintainer="Chotow <i@choyri.com>"
 
-RUN set -x \
-    && cp /usr/share/zoneinfo/${TZ:-Asia/Shanghai} /etc/localtime \
-    && echo "${TZ:-Asia/Shanghai}" > /etc/timezone \
+RUN set -eux; \
     \
-    && mkdir /etc/nginx/conf.d/sites-enabled
+    # https://wiki.alpinelinux.org/wiki/Setting_the_timezone
+    apk add tzdata; \
+    cp /usr/share/zoneinfo/${TZ:-Asia/Shanghai} /etc/localtime; \
+    echo "${TZ:-Asia/Shanghai}" > /etc/timezone; \
+    date; \
+    apk del tzdata; \
+    \
+    mkdir /etc/nginx/conf.d/sites-enabled
 
-COPY --from=builder /etc/nginx/dhparam.pem                  /etc/nginx/dhparam.pem
-COPY --from=builder /usr/lib/nginx/modules/ngx_http_brotli* /etc/nginx/modules/
+COPY --from=builder /etc/nginx/dhparam.pem              /etc/nginx/dhparam.pem
+COPY --from=builder /etc/nginx/modules/ngx_http_brotli* /etc/nginx/modules/
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY conf.d/    /etc/nginx/conf.d/
 

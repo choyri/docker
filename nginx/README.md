@@ -22,6 +22,8 @@
 - `/etc/nginx/conf.d/sites-enabled/`
   - 站点目录
 
+`reuseport` 参数对于一组 `host:port` 仅需要声明一次，不可重复。
+
 
 ## Example
 
@@ -47,7 +49,8 @@ services:
 # /etc/nginx/conf.d/sites-enabled/example.com.conf
 
 server {
-    listen                  443 ssl http2;
+    listen                  443 ssl http2 reuseport;
+    listen                  [::]:443 ssl http2 reuseport;
     server_name             example.com;
 
     include                 /etc/nginx/conf.d/general.conf;
@@ -58,7 +61,7 @@ server {
 
     ssl_certificate         /etc/nginx/ssl/example.com.cer;
     ssl_certificate_key     /etc/nginx/ssl/example.com.key;
-    ssl_trusted_certificate /etc/nginx/ssl/chain.pem;
+    ssl_trusted_certificate /etc/nginx/ssl/chain.pem; # 中间证书 & 根证书
 
     location / {
         root    /usr/share/nginx/html;
@@ -67,6 +70,7 @@ server {
 
 server {
     listen      80;
+    listen      [::]:80;
     server_name example.com;
 
     location / {
