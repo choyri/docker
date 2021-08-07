@@ -1,4 +1,8 @@
-# choyri/frp
+# choyri/frp [Deprecated]
+
+本镜像已停止维护，请使用官方镜像 [fatedier/frps](https://hub.docker.com/r/fatedier/frps)。
+
+---
 
 最小化的 frp 服务端 Docker 镜像。
 
