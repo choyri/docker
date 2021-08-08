@@ -1,9 +1,13 @@
-ARG BASE_IMAGE_TAG=alpine
+ARG VERSION=3.9.1
 
-FROM rabbitmq:${BASE_IMAGE_TAG}
+
+FROM rabbitmq:${VERSION}-alpine
+
+ARG VERSION
 
 LABEL maintainer="Chotow <i@choyri.com>"
+LABEL version=${VERSION}
 
-RUN cd /plugins \
-    && wget https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.8.9/rabbitmq_delayed_message_exchange-3.8.9-0199d11c.ez \
-    && rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange
+RUN cd /plugins; \
+    wget https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.9.0/rabbitmq_delayed_message_exchange-3.9.0.ez; \
+    rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange
