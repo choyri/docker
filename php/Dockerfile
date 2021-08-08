@@ -1,37 +1,47 @@
 ARG BASE_IMAGE_TAG=fpm-alpine
 
+
 FROM php:$BASE_IMAGE_TAG
+
+ARG DEV
 
 LABEL maintainer="Chotow <i@choyri.com>"
 
-ARG BASE_IMAGE_TAG
-ARG DOCKER_TAG=unknown
-
 RUN set -eux; \
-    \
-    echo "Base Image Tag: $BASE_IMAGE_TAG"; \
-    echo "Docker Tag: $DOCKER_TAG"; \
     \
     sed -i 's/http[s]:\/\/dl-cdn.alpinelinux.org/https:\/\/mirrors.aliyun.com/g' /etc/apk/repositories; \ 
     apk update; \
     \
     apk add --virtual .build-deps $PHPIZE_DEPS; \
     \
+    # redis
     pecl install redis; \
     docker-php-ext-enable redis; \
     \
-    apk add imagemagick-dev; \
+    # imagick
+    apk add libgomp imagemagick-dev; \
     pecl install imagick; \
     docker-php-ext-enable imagick; \
     \
+    # gd
     apk add \
         libjpeg-turbo-dev \
         libwebp-dev \
         freetype-dev \
     ; \
-    docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype; \
+    if [[ $PHP_VERSION == 7.3* ]]; then \
+        apk add libpng-dev; \
+        docker-php-ext-configure gd \
+            --with-jpeg-dir=/usr/include/ \
+            --with-png-dir=/usr/include/ \
+            --with-webp-dir=/usr/include/ \
+            --with-freetype-dir=/usr/include/; \
+    else \
+        docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype; \
+    fi; \
     docker-php-ext-install -j$(nproc) gd; \
     \
+    # some other
     apk add \
         libzip-dev \
         gmp-dev \
@@ -44,7 +54,7 @@ RUN set -eux; \
         exif \
     ; \
     \
-    if echo $DOCKER_TAG | grep -q "dev"; then \
+    if [ -n ${DEV:-''} ]; then \
         pecl install xdebug; \
         docker-php-ext-enable xdebug; \
     else \
@@ -52,9 +62,6 @@ RUN set -eux; \
     fi; \
     \
     apk del .build-deps; \
-    \
-    # for imagick
-    apk add libgomp; \
     \
     # https://wiki.alpinelinux.org/wiki/Setting_the_timezone
     apk add tzdata; \

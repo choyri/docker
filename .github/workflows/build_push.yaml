@@ -27,10 +27,23 @@ jobs:
 
       - name: Get Version
         run: |
-          version=${GITHUB_REF##*-}
-          base_image_tag=${version}-alpine
+          # common
+          version=${GITHUB_REF#*-}
+          [ "${version##*-}" == 'dev' ] && dev=true
           echo "VERSION=${version}" >> $GITHUB_ENV
-          echo "BASE_IMAGE_TAG=${base_image_tag}" >> $GITHUB_ENV
+
+          # nginx
+          echo "NGINX_BASE_IMAGE_TAG=${version}-alpine" >> $GITHUB_ENV
+
+          # php
+          echo "PHP_DEV=${dev}" >> $GITHUB_ENV
+          php_version=${version%%-*}
+          echo "PHP_BASE_IMAGE_TAG=${php_version}-fpm-alpine" >> $GITHUB_ENV
+          [ -n "${dev}" ] && php_tag_suffix='-dev'
+          echo "PHP_IMAGE_TAGS<<EOF" >> $GITHUB_ENV
+          echo "choyri/php:${php_version}${php_tag_suffix}" >> $GITHUB_ENV
+          [[ $version == 8* ]] && echo "choyri/php:latest${php_tag_suffix}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: '[nginx] Build and push'
         if: ${{ contains(github.ref, 'nginx') && success() }}
@@ -43,10 +56,27 @@ jobs:
             linux/arm64/v8
             linux/arm/v7
           build-args: |
-            BASE_IMAGE_TAG=${{ env.BASE_IMAGE_TAG }}
+            BASE_IMAGE_TAG=${{ env.NGINX_BASE_IMAGE_TAG }}
           tags: |
             choyri/nginx:${{ env.VERSION }}
             choyri/nginx:latest
+
+      - name: '[php] Build and push'
+        if: ${{ contains(github.ref, 'php') && success() }}
+        uses: docker/build-push-action@v2
+        with:
+          context: ./php
+          push: true
+          platforms: |
+            linux/amd64
+            linux/arm64/v8
+            linux/arm/v7
+          build-args: |
+            BASE_IMAGE_TAG=${{ env.PHP_BASE_IMAGE_TAG }}
+            DEV=${{ env.PHP_DEV }}
+          labels: |
+            version=${{ env.VERSION }}
+          tags: ${{ env.PHP_IMAGE_TAGS }}
 
       - name: '[rabbitmq] Build and push'
         if: ${{ contains(github.ref, 'rabbitmq') && success() }}
