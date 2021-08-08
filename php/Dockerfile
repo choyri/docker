@@ -29,7 +29,16 @@ RUN set -eux; \
         libwebp-dev \
         freetype-dev \
     ; \
-    docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype; \
+    if [[ $PHP_VERSION == 7.3* ]]; then \
+        apk add libpng-dev; \
+        docker-php-ext-configure gd \
+            --with-jpeg-dir=/usr/include/ \
+            --with-png-dir=/usr/include/ \
+            --with-webp-dir=/usr/include/ \
+            --with-freetype-dir=/usr/include/; \
+    else \
+        docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype; \
+    fi; \
     docker-php-ext-install -j$(nproc) gd; \
     \
     # some other
