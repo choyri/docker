@@ -21,7 +21,6 @@ RUN set -eux; \
         pcre-dev \
         zlib-dev \
         git \
-        openssl \
     ; \
     wget https://nginx.org/download/nginx-${VERSION}.tar.gz -O nginx.tar.gz; \
     tar -zxf nginx.tar.gz; \
@@ -32,7 +31,8 @@ RUN set -eux; \
     make modules; \
     cp objs/ngx_http_brotli*.so /etc/nginx/modules/; \
     \
-    openssl dhparam -out /etc/nginx/dhparam.pem 2048; \
+    # https://github.com/mozilla/ssl-config-generator/issues/60
+    curl https://ssl-config.mozilla.org/ffdhe2048.txt > /etc/nginx/dhparam.pem; \
     \
     nginx -v
 
