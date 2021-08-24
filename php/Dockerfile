@@ -29,7 +29,7 @@ RUN set -eux; \
         libwebp-dev \
         freetype-dev \
     ; \
-    if [[ $PHP_VERSION == 7.3* ]]; then \
+    if [[ ! $PHP_VERSION =~ "^(7\.4|8)" ]]; then \
         apk add libpng-dev; \
         docker-php-ext-configure gd \
             --with-jpeg-dir=/usr/include/ \
