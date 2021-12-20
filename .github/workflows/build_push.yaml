@@ -42,7 +42,7 @@ jobs:
           [ -n "${dev}" ] && php_tag_suffix='-dev'
           echo "PHP_IMAGE_TAGS<<EOF" >> $GITHUB_ENV
           echo "choyri/php:${php_version}${php_tag_suffix}" >> $GITHUB_ENV
-          [[ $version == 8* ]] && echo "choyri/php:latest${php_tag_suffix}" >> $GITHUB_ENV
+          [[ $version == 8.1* ]] && echo "choyri/php:latest${php_tag_suffix}" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: '[nginx] Build and push'
